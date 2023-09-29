@@ -5,7 +5,7 @@ from os import environ as env_variable
 
 api_key: str = env_variable.get("OPENWEATHER_API_KEY")
 
-_current = requests.get(f"https://api.openweathermap.org/data/2.5/weather?lat=6.4453&lon=3.2634&appid={api_key}")
+_weather_response = requests.get(f"https://api.openweathermap.org/data/2.5/weather?lat=6.4453&lon=3.2634&appid={api_key}")
 
 days: list = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun",] 
 
@@ -24,13 +24,19 @@ def main(page: Page):
             _c.content.controls[0].update()
 
     # current temp
-    def _current_temp():
-        _current_temp = int(_current.json()['main']['temp'])
-        return [_current_temp]
+    def _temp():
+        _temp: int = int(_weather_response.json()['main']['temp'])
+        _weather: str = _weather_response.json()['weather'][0]['main']
+        _description: str = _weather_response.json()['weather'][0]['description']
+        _wind: int = int(_weather_response.json()['wind']['speed'])
+        _humidity: int = int(_weather_response.json()['main']['humidity'])
+        _feels: int = int(_weather_response.json()['main']['feels_like'])
+
+        return [_temp, _weather, _description, _wind, _humidity, _feels]
 
     def _top():
 
-        _today = _current_temp()
+        _today = _temp()
 
         top = Container(
             width=310, 
@@ -55,7 +61,7 @@ def main(page: Page):
                         alignment="center",
                         controls=[
                             Text(
-                                "Satellite Town",
+                                "Satellite Town, Lagos",
                                 size=16,
                                 weight="500"
                             ),
@@ -93,12 +99,109 @@ def main(page: Page):
                                                 content=Text(
                                                     _today[0],
                                                     size=52,
-                                                )
-                                            )
-                                        ]
-                                    )
-                                ]
-                            )
+                                                ),
+                                            ),
+                                            Container(
+                                                content=Text(
+                                                    "°",
+                                                    size=28,
+                                                    text_align="center",
+                                                ),
+                                            ),
+                                        ],
+                                    ),
+                                    Text(
+                                        _today[1] + " - Overcast",
+                                        size=10,
+                                        color="white54",
+                                        text_align="center",
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+                    Divider(height=8, thickness=1, color="white10"),
+                    Row(
+                        alignment="spaceAround",
+                        controls=[
+                            Container(
+                                content=Column(
+                                    horizontal_alignment="center",
+                                    spacing=2,
+                                    controls=[
+                                        Container(
+                                            alignment=alignment.center,
+                                            content=Image(
+                                                src="./assests/wind.png",
+                                                color="white",
+                                            ),
+                                            width=20,
+                                            height=20,
+                                        ),
+                                        Text(
+                                            str(_today[3]) + " km/h",
+                                            size=11,
+                                        ),
+                                        Text(
+                                            'Wind',
+                                            size=9,
+                                            color="white54",
+                                        ),
+                                    ],
+                                ),
+                            ),
+                            Container(
+                                content=Column(
+                                    horizontal_alignment="center",
+                                    spacing=2,
+                                    controls=[
+                                        Container(
+                                            alignment=alignment.center,
+                                            content=Image(
+                                                src="./assests/humidity.png",
+                                                color="white",
+                                            ),
+                                            width=20,
+                                            height=20,
+                                        ),
+                                        Text(
+                                            str(_today[4]) + "%",
+                                            size=11,
+                                        ),
+                                        Text(
+                                            'Humidity',
+                                            size=9,
+                                            color="white54",
+                                        ),
+                                    ],
+                                ),
+                            ),
+                            Container(
+                                content=Column(
+                                    horizontal_alignment="center",
+                                    spacing=2,
+                                    controls=[
+                                        Container(
+                                            alignment=alignment.center,
+                                            content=Image(
+                                                src="./assests/thermometer.png",
+                                                color="white",
+                                            ),
+                                            width=20,
+                                            height=20,
+                                        ),
+                                        Text(
+                                            str(_today[5]) + "°",
+                                            size=11,
+                                        ),
+                                        Text(
+                                            'Feels Like',
+                                            size=9,
+                                            color="white54",
+                                        ),
+                                    ],
+                                ),
+                            ),
                         ],
                     ),
                 ],
@@ -123,7 +226,7 @@ def main(page: Page):
 
 
 if __name__ == "__main__":
-    # print(_current.text)
+    # print(_weather_response.json)
     ft.app(target=main, assets_dir="assets")
 
 
