@@ -1,11 +1,55 @@
 import flet as ft
 from flet import *
-import requests #, datetime
+import requests, datetime
 from os import environ as env_variable
 
 api_key: str = env_variable.get("OPENWEATHER_API_KEY")
 
-_weather_response = requests.get(f"https://api.openweathermap.org/data/2.5/weather?lat=6.4453&lon=3.2634&appid={api_key}")
+# _weather_response = requests.get(f"https://api.openweathermap.org/data/2.5/weather?lat=6.4453&lon=3.2634&appid={api_key}")
+_weather_response: dict = {
+  "coord": {
+    "lon": 3.2634,
+    "lat": 6.4453
+  },
+  "weather": [
+    {
+      "id": 804,
+      "main": "Clouds",
+      "description": "overcast clouds",
+      "icon": "04d"
+    }
+  ],
+  "base": "stations",
+  "main": {
+    "temp": 301.01,
+    "feels_like": 303.8,
+    "temp_min": 301.01,
+    "temp_max": 301.01,
+    "pressure": 1011,
+    "humidity": 72,
+    "sea_level": 1011,
+    "grnd_level": 1010
+  },
+  "visibility": 10000,
+  "wind": {
+    "speed": 2.83,
+    "deg": 228,
+    "gust": 3.02
+  },
+  "clouds": {
+    "all": 100
+  },
+  "dt": 1696008270,
+  "sys": {
+    "country": "NG",
+    "sunrise": 1695965703,
+    "sunset": 1696009180
+  },
+  "timezone": 3600,
+  "id": 2332459,
+  "name": "Lagos",
+  "cod": 200
+}
 
 days: list = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun",] 
 
@@ -25,18 +69,113 @@ def main(page: Page):
 
     # current temp
     def _temp():
-        _temp: int = int(_weather_response.json()['main']['temp'])
-        _weather: str = _weather_response.json()['weather'][0]['main']
-        _description: str = _weather_response.json()['weather'][0]['description']
-        _wind: int = int(_weather_response.json()['wind']['speed'])
-        _humidity: int = int(_weather_response.json()['main']['humidity'])
-        _feels: int = int(_weather_response.json()['main']['feels_like'])
+        # _temp: int = int(_weather_response.json()['main']['temp'])
+        # _weather: str = _weather_response.json()['weather'][0]['main']
+        # _description: str = _weather_response.json()['weather'][0]['description']
+        # _wind: int = int(_weather_response.json()['wind']['speed'])
+        # _humidity: int = int(_weather_response.json()['main']['humidity'])
+        # _feels: int = int(_weather_response.json()['main']['feels_like'])
+
+        _temp: int = int(_weather_response['main']['temp'])
+        _weather: str = _weather_response['weather'][0]['main']
+        _description: str = _weather_response['weather'][0]['description']
+        _wind: int = int(_weather_response['wind']['speed'])
+        _humidity: int = int(_weather_response['main']['humidity'])
+        _feels: int = int(_weather_response['main']['feels_like'])
 
         return [_temp, _weather, _description, _wind, _humidity, _feels]
+
+    def _extra():
+        _extra_info: list = []
+
+        _extra: list = [
+            [
+                int(_weather_response["visibility"] / 1000),
+                "Km",
+                "Visibility",
+                "./assests/visibility.png",
+            ],
+            [
+                round(_weather_response["main"]["pressure"] * 0.03, 2),
+                "inHg",
+                "Pressure",
+                "./assests/barometer.png",
+            ],
+            [
+                datetime.datetime.fromtimestamp(
+                    _weather_response["sys"]["sunset"]
+                ).strftime("%I:%M %p"),
+                "",
+                "Sunset",
+                "./assests/sunset.png",
+            ],
+            [
+                datetime.datetime.fromtimestamp(
+                    _weather_response["sys"]["sunset"]
+                ).strftime("%I:%M %p"),
+                "",
+                "Sunrise",
+                "./assests/sunrise.png",
+            ],
+        ]
+
+        for data in _extra:
+            _extra_info.append(
+                Container(
+                    bgcolor="white10",
+                    border_radius=12,
+                    alignment=alignment.center,
+                    content=Column(
+                        alignment="center",
+                        horizontal_alignment="center",
+                        spacing=25,
+                        controls=[
+                            Container(
+                                alignment=alignment.center,
+                                content=Image(
+                                    src=data[3],
+                                    color="white"
+                                ),
+                                width=32,
+                                height=32,
+                            ),
+                            Container(
+                                content=Column(
+                                    alignment="center",
+                                    horizontal_alignment="center",
+                                    spacing=0,
+                                    controls=[
+                                        Text(str(data[0]) + " " + data[1],
+                                        size=14,
+                                        ),
+                                        Text(
+                                            str(data[2]),
+                                            size=11,
+                                            color="white54",
+                                        ),
+                                    ],
+                                ),
+                            ),
+                        ],
+                    ),
+                ),
+            ),
+        
+        return _extra_info
 
     def _top():
 
         _today = _temp()
+
+        _today_extra = GridView(
+            max_extent=150,
+            expand=1,
+            run_spacing=5,
+            spacing=5,
+        )
+
+        for info in _extra():
+            _today_extra.controls.append(info)
 
         top = Container(
             width=310, 
@@ -222,12 +361,12 @@ def main(page: Page):
             height=550, 
             controls=[_top(),],),)
 
+    page.title= "Flet Weather App"
+    page.window_height=700
+    page.window_width=350
     page.add(_c)
+    page.update()
 
 
 if __name__ == "__main__":
-    # print(_weather_response.json)
     ft.app(target=main, assets_dir="assets")
-
-
-# ft.app(target=main)
