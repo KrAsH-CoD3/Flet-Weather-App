@@ -5,51 +5,10 @@ from os import environ as env_variable
 
 api_key: str = env_variable.get("OPENWEATHER_API_KEY")
 
-# _weather_response = requests.get(f"https://api.openweathermap.org/data/2.5/weather?lat=6.4453&lon=3.2634&appid={api_key}")
-_weather_response: dict = {
-  "coord": {
-    "lon": 3.2634,
-    "lat": 6.4453
-  },
-  "weather": [
-    {
-      "id": 804,
-      "main": "Clouds",
-      "description": "overcast clouds",
-      "icon": "04d"
-    }
-  ],
-  "base": "stations",
-  "main": {
-    "temp": 301.01,
-    "feels_like": 303.8,
-    "temp_min": 301.01,
-    "temp_max": 301.01,
-    "pressure": 1011,
-    "humidity": 72,
-    "sea_level": 1011,
-    "grnd_level": 1010
-  },
-  "visibility": 10000,
-  "wind": {
-    "speed": 2.83,
-    "deg": 228,
-    "gust": 3.02
-  },
-  "clouds": {
-    "all": 100
-  },
-  "dt": 1696008270,
-  "sys": {
-    "country": "NG",
-    "sunrise": 1695965703,
-    "sunset": 1696009180
-  },
-  "timezone": 3600,
-  "id": 2332459,
-  "name": "Lagos",
-  "cod": 200
-}
+_weather_response = requests.get(f"https://api.openweathermap.org/data/2.5/weather?lat=6.4453&lon=3.2634&appid={api_key}")
+
+_forcast_response =  requests.get(f"https://api.openweathermap.org/data/2.5/forecast?lat=6.4453&lon=3.2634&appid={api_key}")
+
 
 days: list = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun",] 
 
@@ -61,27 +20,21 @@ def main(page: Page):
     # animation
     def _expand(e):
         if e.data == "true":
-            _c.content.controls[0].height = 560
-            _c.content.controls[0].update()
+            _c.content.controls[1].height = 560
+            _c.content.controls[1].update()
         else:
-            _c.content.controls[0].height = 660 * 0.40
-            _c.content.controls[0].update()
+            _c.content.controls[1].height = 660 * 0.40
+            _c.content.controls[1].update()
 
     # current temp
     def _temp():
-        # _temp: int = int(_weather_response.json()['main']['temp'])
-        # _weather: str = _weather_response.json()['weather'][0]['main']
-        # _description: str = _weather_response.json()['weather'][0]['description']
-        # _wind: int = int(_weather_response.json()['wind']['speed'])
-        # _humidity: int = int(_weather_response.json()['main']['humidity'])
-        # _feels: int = int(_weather_response.json()['main']['feels_like'])
 
-        _temp: int = int(_weather_response['main']['temp'])
-        _weather: str = _weather_response['weather'][0]['main']
-        _description: str = _weather_response['weather'][0]['description']
-        _wind: int = int(_weather_response['wind']['speed'])
-        _humidity: int = int(_weather_response['main']['humidity'])
-        _feels: int = int(_weather_response['main']['feels_like'])
+        _temp: int = int(_weather_response.json()['main']['temp'])
+        _weather: str = _weather_response.json()['weather'][0]['main']
+        _description: str = _weather_response.json()['weather'][0]['description']
+        _wind: int = int(_weather_response.json()['wind']['speed'])
+        _humidity: int = int(_weather_response.json()['main']['humidity'])
+        _feels: int = int(_weather_response.json()['main']['feels_like'])
 
         return [_temp, _weather, _description, _wind, _humidity, _feels]
 
@@ -90,20 +43,20 @@ def main(page: Page):
 
         _extra: list = [
             [
-                int(_weather_response["visibility"] / 1000),
+                int(_weather_response.json()["visibility"] / 1000),
                 "Km",
                 "Visibility",
                 "./assests/visibility.png",
             ],
             [
-                round(_weather_response["main"]["pressure"] * 0.03, 2),
+                round(_weather_response.json()["main"]["pressure"] * 0.03, 2),
                 "inHg",
                 "Pressure",
                 "./assests/barometer.png",
             ],
             [
                 datetime.datetime.fromtimestamp(
-                    _weather_response["sys"]["sunset"]
+                    _weather_response.json()["sys"]["sunset"]
                 ).strftime("%I:%M %p"),
                 "",
                 "Sunset",
@@ -111,7 +64,7 @@ def main(page: Page):
             ],
             [
                 datetime.datetime.fromtimestamp(
-                    _weather_response["sys"]["sunset"]
+                    _weather_response.json()["sys"]["sunset"]
                 ).strftime("%I:%M %p"),
                 "",
                 "Sunrise",
@@ -343,12 +296,74 @@ def main(page: Page):
                             ),
                         ],
                     ),
+                    _today_extra,
                 ],
             ),
         )
 
         return top
 
+    def _bot_data():
+        _bot_data: list = []
+
+        for index in range(0, 33, 8): # Forcast are for only 5 days (5 * 8(hours in 24hrs))
+            _bot_data.append(
+                Row(
+                    spacing=5,
+                    alignment="spaceBetween",
+                    controls=[
+                        Row(
+                            expand=1,
+                            alignment="start",
+                            controls=[
+                                Container(
+                                    alignment=alignment.center,
+                                    content=Text(
+                                        days[
+                                            datetime.datetime.weekday(
+                                                datetime.datetime.fromtimestamp(_forcast_response.json()["list"][index]["dt"])
+                                            )
+                                        ],
+                                    ),
+                                ),
+                            ],
+                        ),
+                        Row(
+                            expand=1,
+                            controls=[
+                                Container(
+                                    content=Row(
+                                        alignment="start",
+                                        controls=[
+                                            Container(
+                                                width=20, height=20, alignment=alignment.center, 
+                                            ),
+                                        ],
+                                    ),
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ),
+        return _bot_data
+
+    def _bottom():
+        _bot_column = Column(
+            alignment="center",
+            horizontal_alignment="center",
+            spacing=25,
+        )
+
+        for data in _bot_data():
+            _bot_column.controls.append(data)
+
+        bottom = Container(
+            padding=padding.only(top=280, right=20, bottom=20, left=20),
+            content = _bot_column,
+        )
+    
+        return bottom
 
     _c = Container(
         width=310, 
@@ -359,7 +374,12 @@ def main(page: Page):
         content=Stack(
             width=300, 
             height=550, 
-            controls=[_top(),],),)
+            controls=[
+                _bottom(),
+                _top(),
+            ],
+        ),
+    )
 
     page.title= "Flet Weather App"
     page.window_height=700
