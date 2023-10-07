@@ -5,12 +5,23 @@ from os import environ as env_variable
 
 api_key: str = env_variable.get("OPENWEATHER_API_KEY")
 
-_weather_response = requests.get(f"https://api.openweathermap.org/data/2.5/weather?lat=6.4453&lon=3.2634&appid={api_key}")
+_weather_response = requests.get(
+    f"https://api.openweathermap.org/data/2.5/weather?lat=6.4453&lon=3.2634&appid={api_key}"
+)
 
-_forcast_response =  requests.get(f"https://api.openweathermap.org/data/2.5/forecast?lat=6.4453&lon=3.2634&appid={api_key}")
+_forcast_response = requests.get(
+    f"https://api.openweathermap.org/data/2.5/forecast?lat=6.4453&lon=3.2634&appid={api_key}"
+)
 
-
-days: list = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun",] 
+days: list = [
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat",
+    "Sun",
+]
 
 
 def main(page: Page):
@@ -28,31 +39,57 @@ def main(page: Page):
 
     # current temp
     def _temp():
+        _temp: int = int(_forcast_response.json()["list"][0]["main"]["temp"])
+        _weather: str = _forcast_response.json()["list"][0]["weather"][0][
+            "main"
+        ].lower()
+        _description: str = _forcast_response.json()["list"][0]["weather"][0][
+            "description"
+        ].lower()
+        _wind: int = int(_forcast_response.json()["list"][0]["wind"]["speed"])
+        _humidity: int = int(_forcast_response.json()["list"][0]["main"]["humidity"])
+        _feels: int = int(_forcast_response.json()["list"][0]["main"]["feels_like"])
+        _todays_img_name: str = _forcast_response.json()["list"][0]["weather"][0][
+            "description"
+        ].lower()
 
-        _temp: int = int(_weather_response.json()['main']['temp'])
-        _weather: str = _weather_response.json()['weather'][0]['main']
-        _description: str = _weather_response.json()['weather'][0]['description']
-        _wind: int = int(_weather_response.json()['wind']['speed'])
-        _humidity: int = int(_weather_response.json()['main']['humidity'])
-        _feels: int = int(_weather_response.json()['main']['feels_like'])
+        return [
+            _temp,
+            _weather,
+            _description,
+            _wind,
+            _humidity,
+            _feels,
+            _todays_img_name,
+        ]
 
-        return [_temp, _weather, _description, _wind, _humidity, _feels]
+    _today = _temp()
 
     def _extra():
         _extra_info: list = []
 
         _extra: list = [
             [
-                int(_weather_response.json()["visibility"] / 1000),
+                int(_forcast_response.json()["list"][0]["visibility"] / 1000),
                 "Km",
                 "Visibility",
-                "./assests/visibility.png",
+                "./assests/icons/visibility.png",
             ],
             [
-                round(_weather_response.json()["main"]["pressure"] * 0.03, 2),
+                round(
+                    _forcast_response.json()["list"][0]["main"]["pressure"] * 0.03, 2
+                ),
                 "inHg",
                 "Pressure",
-                "./assests/barometer.png",
+                "./assests/icons/barometer.png",
+            ],
+            [
+                datetime.datetime.fromtimestamp(
+                    _weather_response.json()["sys"]["sunrise"]
+                ).strftime("%I:%M %p"),
+                "",
+                "Sunrise",
+                "./assests/icons/sunrise.png",
             ],
             [
                 datetime.datetime.fromtimestamp(
@@ -60,15 +97,7 @@ def main(page: Page):
                 ).strftime("%I:%M %p"),
                 "",
                 "Sunset",
-                "./assests/sunset.png",
-            ],
-            [
-                datetime.datetime.fromtimestamp(
-                    _weather_response.json()["sys"]["sunset"]
-                ).strftime("%I:%M %p"),
-                "",
-                "Sunrise",
-                "./assests/sunrise.png",
+                "./assests/icons/sunset.png",
             ],
         ]
 
@@ -85,10 +114,7 @@ def main(page: Page):
                         controls=[
                             Container(
                                 alignment=alignment.center,
-                                content=Image(
-                                    src=data[3],
-                                    color="white"
-                                ),
+                                content=Image(src=data[3], color="white"),
                                 width=32,
                                 height=32,
                             ),
@@ -98,8 +124,9 @@ def main(page: Page):
                                     horizontal_alignment="center",
                                     spacing=0,
                                     controls=[
-                                        Text(str(data[0]) + " " + data[1],
-                                        size=14,
+                                        Text(
+                                            str(data[0]) + " " + data[1],
+                                            size=14,
                                         ),
                                         Text(
                                             str(data[2]),
@@ -113,13 +140,10 @@ def main(page: Page):
                     ),
                 ),
             ),
-        
+
         return _extra_info
 
     def _top():
-
-        _today = _temp()
-
         _today_extra = GridView(
             max_extent=150,
             expand=1,
@@ -131,11 +155,11 @@ def main(page: Page):
             _today_extra.controls.append(info)
 
         top = Container(
-            width=310, 
-            height=660 * 0.40, 
+            width=310,
+            height=660 * 0.40,
             gradient=LinearGradient(
-                begin=alignment.bottom_left, 
-                end=alignment.top_right, 
+                begin=alignment.bottom_left,
+                end=alignment.top_right,
                 colors=["lightblue600", "lightblue900"],
             ),
             border_radius=35,
@@ -152,11 +176,7 @@ def main(page: Page):
                     Row(
                         alignment="center",
                         controls=[
-                            Text(
-                                "Satellite Town, Lagos",
-                                size=16,
-                                weight="500"
-                            ),
+                            Text("Satellite Town, Lagos", size=16, weight="500"),
                         ],
                     ),
                     Container(padding=padding.only(bottom=5)),
@@ -169,8 +189,7 @@ def main(page: Page):
                                     Container(
                                         width=90,
                                         height=90,
-                                        image_src=
-                                        "assests/rain cloud.webp",
+                                        image_src=f"./assests/clouds/{_today[6]}.png",
                                     ),
                                 ],
                             ),
@@ -203,7 +222,7 @@ def main(page: Page):
                                         ],
                                     ),
                                     Text(
-                                        _today[1] + " - Overcast",
+                                        "Overview - " + _today[6],
                                         size=10,
                                         color="white54",
                                         text_align="center",
@@ -224,7 +243,7 @@ def main(page: Page):
                                         Container(
                                             alignment=alignment.center,
                                             content=Image(
-                                                src="./assests/wind.png",
+                                                src="./assests/icons/wind.png",
                                                 color="white",
                                             ),
                                             width=20,
@@ -235,7 +254,7 @@ def main(page: Page):
                                             size=11,
                                         ),
                                         Text(
-                                            'Wind',
+                                            "Wind",
                                             size=9,
                                             color="white54",
                                         ),
@@ -250,7 +269,7 @@ def main(page: Page):
                                         Container(
                                             alignment=alignment.center,
                                             content=Image(
-                                                src="./assests/humidity.png",
+                                                src="./assests/icons/humidity.png",
                                                 color="white",
                                             ),
                                             width=20,
@@ -261,7 +280,7 @@ def main(page: Page):
                                             size=11,
                                         ),
                                         Text(
-                                            'Humidity',
+                                            "Humidity",
                                             size=9,
                                             color="white54",
                                         ),
@@ -276,7 +295,7 @@ def main(page: Page):
                                         Container(
                                             alignment=alignment.center,
                                             content=Image(
-                                                src="./assests/thermometer.png",
+                                                src="./assests/icons/thermometer.png",
                                                 color="white",
                                             ),
                                             width=20,
@@ -287,7 +306,7 @@ def main(page: Page):
                                             size=11,
                                         ),
                                         Text(
-                                            'Feels Like',
+                                            "Feels Like",
                                             size=9,
                                             color="white54",
                                         ),
@@ -306,7 +325,9 @@ def main(page: Page):
     def _bot_data():
         _bot_data: list = []
 
-        for index in range(0, 33, 8): # Forcast are for only 5 days (5 * 8(hours in 24hrs))
+        for index in range(
+            0, 33, 8
+        ):  # Forcast are for only 5 days (5 * 8(hours in 24hrs))
             _bot_data.append(
                 Row(
                     spacing=5,
@@ -321,7 +342,11 @@ def main(page: Page):
                                     content=Text(
                                         days[
                                             datetime.datetime.weekday(
-                                                datetime.datetime.fromtimestamp(_forcast_response.json()["list"][index]["dt"])
+                                                datetime.datetime.fromtimestamp(
+                                                    _forcast_response.json()["list"][
+                                                        index
+                                                    ]["dt"]
+                                                )
                                             )
                                         ],
                                     ),
@@ -336,7 +361,12 @@ def main(page: Page):
                                         alignment="start",
                                         controls=[
                                             Container(
-                                                width=20, height=20, alignment=alignment.center, 
+                                                width=20,
+                                                height=20,
+                                                alignment=alignment.center_left,
+                                                content=Image(
+                                                    src=f"/assests/clouds/{_today[6]}.png"
+                                                ),
                                             ),
                                         ],
                                     ),
@@ -360,20 +390,20 @@ def main(page: Page):
 
         bottom = Container(
             padding=padding.only(top=280, right=20, bottom=20, left=20),
-            content = _bot_column,
+            content=_bot_column,
         )
-    
+
         return bottom
 
     _c = Container(
-        width=310, 
-        height=660, 
-        border_radius=35, 
-        bgcolor="black", 
-        padding=10, 
+        width=310,
+        height=660,
+        border_radius=35,
+        bgcolor="black",
+        padding=10,
         content=Stack(
-            width=300, 
-            height=550, 
+            width=300,
+            height=550,
             controls=[
                 _bottom(),
                 _top(),
@@ -381,9 +411,9 @@ def main(page: Page):
         ),
     )
 
-    page.title= "Flet Weather App"
-    page.window_height=700
-    page.window_width=350
+    page.title = "Weather App"
+    page.window_height = 700
+    page.window_width = 350
     page.add(_c)
     page.update()
 

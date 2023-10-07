@@ -1,4 +1,5 @@
 .gitignore
 forcast.json
+new_forcast.json
 weather.json
 test.py
