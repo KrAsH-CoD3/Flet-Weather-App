@@ -1,7 +1,9 @@
-import flet as ft
 from flet import *
 import requests, datetime
 from os import environ as env_variable
+from dotenv import load_dotenv
+
+load_dotenv()
 
 api_key: str = env_variable.get("OPENWEATHER_API_KEY")
 
@@ -190,6 +192,7 @@ def main(page: Page):
                                         width=90,
                                         height=90,
                                         image_src=f"./assests/clouds/{_today[6]}.png",
+                                        # Container.image.src=f"./assests/clouds/{_today[6]}.png",
                                     ),
                                 ],
                             ),
@@ -419,4 +422,4 @@ def main(page: Page):
 
 
 if __name__ == "__main__":
-    ft.app(target=main, assets_dir="assets")
+    app(target=main, assets_dir="assets")
